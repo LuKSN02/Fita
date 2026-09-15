@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fita</title>
+
+<style>
+/* ==========================================================================
+   TOKENS
+   ========================================================================== */
+:root{
+  --bg:#121212;
+  --elev:#181818;
+  --elev-2:#242424;
+  --hover:#2a2a2a;
+  --line:#2c2c2c;
+  --text:#f2f2f0;
+  --muted:#a3a39d;
+  --dim:#6f6f6a;
+  --accent:#ffd166;
+  --accent-ink:#1a1408;
+  --danger:#ff7a6b;
+  --radius:10px;
+  --sidebar-w:250px;
+  --player-h:92px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#3a3a3a;border-radius:6px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#525252;background-clip:content-box;border:3px solid transparent}
+
+/* ==========================================================================
+   ESTRUTURA
+   ========================================================================== */
+.app{
+  display:grid;
+  grid-template-columns:var(--sidebar-w) 1fr;
+  grid-template-rows:1fr var(--player-h);
+  grid-template-areas:"sidebar main" "player player";
+  height:100dvh;gap:8px;padding:8px;
+}
+
+/* -------- SIDEBAR -------- */
+.sidebar{grid-area:sidebar;background:var(--elev);border-radius:var(--radius);padding:20px 0 12px;display:flex;flex-direction:column;overflow:hidden}
+.brand{display:flex;align-items:center;gap:10px;padding:0 20px 22px}
+.brand-mark{width:26px;height:26px;border-radius:6px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);flex:none}
+.brand-name{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.nav{padding:0 12px;display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:14px;padding:9px 12px;border-radius:6px;color:var(--muted);font-weight:600;font-size:14.5px;width:100%;text-align:left;transition:color .12s,background .12s}
+.nav button:hover{color:var(--text);background:var(--elev-2)}
+.nav button.active{color:var(--text)}
+.shelf{margin:20px 12px 0;padding-top:16px;border-top:1px solid var(--line);flex:1;display:flex;flex-direction:column;min-height:0}
+.shelf-head{display:flex;align-items:center;justify-content:space-between;padding:0 12px 8px}
+.shelf-head h2{font-size:12.5px;font-weight:600;color:var(--muted)}
+.shelf-head button{color:var(--muted);display:grid;place-items:center;padding:4px;border-radius:4px}
+.shelf-head button:hover{color:var(--text);background:var(--elev-2)}
+.shelf-list{overflow-y:auto;min-height:0;flex:1}
+.shelf-item{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:6px;width:100%;color:var(--muted);font-size:14px;text-align:left}
+.shelf-item:hover{background:var(--elev-2);color:var(--text)}
+.shelf-item.active{color:var(--accent)}
+.shelf-item .name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shelf-item .count{font-size:12px;opacity:.7;flex:none}
+.shelf-empty{padding:8px 12px;font-size:13px;color:var(--dim)}
+
+/* -------- MAIN -------- */
+.main{grid-area:main;background:linear-gradient(180deg,#1c1a16 0,var(--elev) 260px);border-radius:var(--radius);overflow-y:auto;padding:36px 40px 140px}
+.view{max-width:1100px}
+
+/* Hero */
+.hero h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin-bottom:10px}
+.hero p.lead{color:var(--muted);max-width:52ch;margin-bottom:22px}
+.paste{display:flex;gap:10px;flex-wrap:wrap;max-width:720px}
+.field{flex:1 1 320px;display:flex;align-items:center;background:var(--elev-2);border:1px solid var(--line);border-radius:999px;padding:0 8px 0 18px;transition:border-color .15s}
+.field:focus-within{border-color:var(--accent)}
+.field svg{color:var(--muted);flex:none}
+.field input{flex:1;background:none;border:0;color:var(--text);padding:14px 12px;min-width:0}
+.field input::placeholder{color:var(--dim)}
+.field input:focus{outline:none}
+.btn-primary{background:var(--accent);color:var(--accent-ink);font-weight:700;padding:14px 26px;border-radius:999px;display:flex;align-items:center;gap:8px;transition:filter .15s,transform .08s;white-space:nowrap}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-primary:active{transform:scale(.97)}
+.btn-ghost{border:1px solid var(--line);border-radius:999px;padding:9px 18px;font-weight:600;font-size:14px;color:var(--muted);transition:border-color .15s,color .15s}
+.btn-ghost:hover{border-color:var(--text);color:var(--text)}
+.hint{margin-top:12px;font-size:13px;color:var(--dim);max-width:60ch}
+.hint code{background:var(--elev-2);padding:2px 6px;border-radius:4px;font-size:12.5px}
+
+/* Cabeçalhos de seção */
+.section{margin-top:44px}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+.section-head h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.section-head .tools{display:flex;gap:6px;align-items:center}
+.section-head .tools button{font-size:13px;color:var(--muted);font-weight:600;padding:6px 10px;border-radius:6px}
+.section-head .tools button:hover{color:var(--text);background:var(--elev-2)}
+
+/* Lista de faixas */
+.tracks{display:flex;flex-direction:column;gap:1px}
+.track{display:flex;align-items:center;gap:12px;padding:8px;border-radius:8px;transition:background .12s;cursor:pointer}
+.track:hover{background:var(--elev-2)}
+.track.playing .t-title{color:var(--accent)}
+.track.drag-over{box-shadow:inset 0 2px 0 var(--accent)}
+.track.dragging{opacity:.4}
+.t-index{width:22px;text-align:right;font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;flex:none}
+.track img{width:44px;height:44px;border-radius:5px;object-fit:cover;background:var(--elev-2);flex:none}
+.t-meta{min-width:0;flex:1}
+.t-title{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-sub{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t-actions{display:flex;gap:2px;opacity:0;flex:none}
+.track:hover .t-actions,.track:focus-within .t-actions{opacity:1}
+.t-actions button{color:var(--muted);padding:7px;border-radius:5px;display:grid;place-items:center}
+.t-actions button:hover{color:var(--text);background:var(--hover)}
+.t-actions button.rm:hover{color:var(--danger)}
+
+/* Grade de playlists */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:18px}
+.card{background:var(--elev-2);border-radius:8px;padding:14px;text-align:left;transition:background .15s}
+.card:hover{background:var(--hover)}
+.card-art{aspect-ratio:1;border-radius:6px;background:linear-gradient(135deg,#3a3326,#211f1a);margin-bottom:12px;display:grid;place-items:center;overflow:hidden;position:relative}
+.card-art img{width:100%;height:100%;object-fit:cover}
+.card-art svg{color:#5c5545}
+.card-title{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-sub{font-size:12.5px;color:var(--muted);margin-top:3px}
+
+/* Cabeçalho de playlist */
+.pl-head{display:flex;gap:24px;align-items:flex-end;margin-bottom:28px;flex-wrap:wrap}
+.pl-art{width:176px;height:176px;border-radius:8px;background:linear-gradient(135deg,#3a3326,#211f1a);display:grid;place-items:center;overflow:hidden;flex:none}
+.pl-art img{width:100%;height:100%;object-fit:cover}
+.pl-info h1{font-size:clamp(28px,4vw,46px);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:6px 0}
+.pl-info .kicker{font-size:12.5px;color:var(--muted);font-weight:600}
+.pl-info .meta{font-size:13px;color:var(--muted)}
+.pl-actions{display:flex;gap:10px;align-items:center;margin-bottom:22px;flex-wrap:wrap}
+
+.empty{border:1px dashed var(--line);border-radius:var(--radius);padding:26px 20px;color:var(--muted);font-size:14px;max-width:60ch}
+.empty strong{color:var(--text);display:block;margin-bottom:4px;font-weight:600}
+
+/* Busca */
+.key-box{background:var(--elev-2);border:1px solid var(--line);border-radius:var(--radius);padding:20px;max-width:640px}
+.key-box h3{font-size:15px;margin-bottom:8px}
+.key-box p{font-size:13.5px;color:var(--muted);margin-bottom:14px}
+.key-box ol{font-size:13.5px;color:var(--muted);margin:0 0 16px 18px;display:flex;flex-direction:column;gap:4px}
+.key-box a{color:var(--accent)}
+.key-row{display:flex;gap:8px;flex-wrap:wrap}
+.key-row input{flex:1 1 260px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--text);padding:10px 12px}
+.key-row input:focus{outline:none;border-color:var(--accent)}
+
+/* ==========================================================================
+   PALCO FLUTUANTE (iframe do YouTube)
+   ========================================================================== */
+.stage{
+  position:fixed;right:20px;bottom:calc(var(--player-h) + 18px);
+  width:300px;background:#000;border-radius:10px;overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.6);z-index:40;border:1px solid #000;
+}
+.stage-bar{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 12px;background:var(--elev-2);font-size:12px;color:var(--muted)}
+.stage-bar .grow{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stage-bar button{color:var(--muted);padding:4px;border-radius:4px;display:grid;place-items:center}
+.stage-bar button:hover{color:var(--text)}
+.stage-frame{aspect-ratio:16/9;position:relative}
+.stage-frame iframe{width:100%;height:100%;border:0;display:block}
+.stage.small{width:212px}
+.stage-idle{position:absolute;inset:0;display:grid;place-items:center;background:var(--elev-2);color:var(--dim);font-size:12.5px;text-align:center;padding:12px}
+.stage.playing .stage-idle{display:none}
+
+/* ==========================================================================
+   PLAYER
+   ========================================================================== */
+.player{grid-area:player;background:var(--elev);border-radius:var(--radius);display:grid;grid-template-columns:minmax(180px,1fr) minmax(320px,2fr) minmax(180px,1fr);align-items:center;gap:16px;padding:0 18px}
+.now{display:flex;align-items:center;gap:12px;min-width:0}
+.now img{width:52px;height:52px;border-radius:6px;object-fit:cover;background:var(--elev-2);flex:none}
+.now-meta{min-width:0}
+.now-title{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.controls{display:flex;flex-direction:column;align-items:center;gap:8px}
+.buttons{display:flex;align-items:center;gap:18px}
+.ctl{color:var(--muted);display:grid;place-items:center;position:relative;transition:color .12s,transform .08s}
+.ctl:hover{color:var(--text)}
+.ctl[aria-pressed="true"]{color:var(--accent)}
+.ctl:disabled{opacity:.35;cursor:default}
+.ctl:disabled:hover{color:var(--muted)}
+.ctl-play{background:var(--text);color:#111;width:36px;height:36px;border-radius:50%}
+.ctl-play:hover{transform:scale(1.06);color:#111}
+.scrubber{display:flex;align-items:center;gap:10px;width:100%;max-width:560px}
+.time{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;width:38px;flex:none}
+.time.right{text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%;height:14px;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(to right,var(--fc,var(--text)) var(--fill,0%),#4d4d4d var(--fill,0%))}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:#4d4d4d}
+input[type=range]::-moz-range-progress{height:4px;border-radius:2px;background:var(--fc,var(--text))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--text);margin-top:-4px;opacity:0;transition:opacity .12s}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:var(--text);opacity:0;transition:opacity .12s}
+input[type=range]:hover::-webkit-slider-thumb,input[type=range]:focus-visible::-webkit-slider-thumb{opacity:1}
+input[type=range]:hover::-moz-range-thumb,input[type=range]:focus-visible::-moz-range-thumb{opacity:1}
+input[type=range]:hover{--fc:var(--accent)}
+.extras{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.volume{width:100px}
+
+/* ==========================================================================
+   POPOVER / MODAL / TOAST
+   ========================================================================== */
+.pop{position:fixed;z-index:80;background:var(--elev-2);border:1px solid var(--line);border-radius:8px;padding:5px;min-width:210px;box-shadow:0 16px 40px rgba(0,0,0,.6);display:none}
+.pop.open{display:block}
+.pop button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 11px;border-radius:5px;font-size:14px;color:var(--text)}
+.pop button:hover{background:var(--hover)}
+.pop .sep{height:1px;background:var(--line);margin:5px 0}
+.pop .label{font-size:12px;color:var(--muted);padding:6px 11px 4px}
+.pop .scroll{max-height:220px;overflow-y:auto}
+
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:90;display:none;place-items:center;padding:20px}
+.backdrop.open{display:grid}
+.modal{background:var(--elev-2);border-radius:12px;padding:24px;width:min(440px,100%)}
+.modal h3{font-size:20px;font-weight:700;margin-bottom:6px;letter-spacing:-.02em}
+.modal p{font-size:13.5px;color:var(--muted);margin-bottom:16px}
+.modal input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--text);padding:12px 14px;margin-bottom:18px}
+.modal input:focus{outline:none;border-color:var(--accent)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px}
+
+.banner{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--danger);color:#2a0f0b;font-size:13.5px;font-weight:600;padding:10px 18px;text-align:center;display:none}
+.banner a{color:#2a0f0b;text-decoration:underline}
+.banner.show{display:block}
+
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--player-h) + 24px);z-index:95;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--text);color:#111;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast.err{background:var(--danger);color:#2a0f0b}
+
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.25);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ==========================================================================
+   RESPONSIVO
+   ========================================================================== */
+@media (max-width:900px){
+  .app{grid-template-columns:1fr;grid-template-areas:"main" "player"}
+  .sidebar{display:none}
+  .main{padding:24px 18px 200px}
+  .player{grid-template-columns:1fr auto;gap:8px;padding:0 12px}
+  .controls{grid-column:1/-1;grid-row:1;padding-top:6px}
+  .extras{display:none}
+  .stage{right:12px;left:12px;width:auto;bottom:calc(var(--player-h) + 12px)}
+  .stage.small{width:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Zm4 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8 1h6v2H9v-2Z"/></svg>
+      </span>
+      <span class="brand-name">Fita</span>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button data-view="inicio" class="active">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>
+        Início
+      </button>
+      <button data-view="busca">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        Buscar
+      </button>
+      <button data-view="biblioteca">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16M9 4v16M14 5l5 15"/></svg>
+        Sua biblioteca
+      </button>
+    </nav>
+
+    <div class="shelf">
+      <div class="shelf-head">
+        <h2>Playlists</h2>
+        <button id="btn-nova-playlist" title="Criar playlist" aria-label="Criar playlist">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div class="shelf-list" id="shelf-list"></div>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTEÚDO ===================== -->
+  <main class="main" id="main"><div class="view" id="view"></div></main>
+
+  <!-- ===================== PLAYER ===================== -->
+  <footer class="player">
+    <div class="now">
+      <img id="now-art" alt="">
+      <div class="now-meta">
+        <div class="now-title" id="now-title">Nada tocando</div>
+        <div class="now-sub" id="now-sub">Cole um link para começar</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="buttons">
+        <button class="ctl" id="btn-shuffle" aria-pressed="false" title="Aleatório" aria-label="Aleatório">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h5v5M21 4l-6.5 6.5M16 20h5v-5M21 20l-6.5-6.5M3 4l6.5 6.5M3 20l6.5-6.5"/></svg>
+        </button>
+        <button class="ctl" id="btn-prev" title="Anterior" aria-label="Faixa anterior">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5.5v13a1 1 0 0 1-1.5.87l-11-6.5a1 1 0 0 1 0-1.74l11-6.5A1 1 0 0 1 20 5.5Z"/></svg>
+        </button>
+        <button class="ctl ctl-play" id="btn-toggle" title="Tocar" aria-label="Tocar">
+          <svg id="icon-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z"/></svg>
+          <svg id="icon-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M7 4h4v16H7zM13 4h4v16h-4z"/></svg>
+        </button>
+        <button class="ctl" id="btn-next" title="Próxima" aria-label="Próxima faixa">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 4 5.5Z"/></svg>
+        </button>
+        <button class="ctl" id="btn-repeat" aria-pressed="false" title="Repetir" aria-label="Repetir">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <span id="repeat-one" style="display:none;position:absolute;font-size:9px;font-weight:800;transform:translateY(1px)">1</span>
+        </button>
+      </div>
+      <div class="scrubber">
+        <span class="time" id="t-cur">0:00</span>
+        <input type="range" id="seek" min="0" max="100" value="0" step="0.1" aria-label="Progresso">
+        <span class="time right" id="t-tot">0:00</span>
+      </div>
+    </div>
+
+    <div class="extras">
+      <button class="ctl" id="btn-queue" title="Ver fila" aria-label="Ver fila">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h11M4 12h11M4 18h7M17 13v6M20 10v9"/></svg>
+      </button>
+      <button class="ctl" id="btn-mute" title="Silenciar" aria-label="Silenciar">
+        <svg id="icon-vol" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+        <svg id="icon-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>
+      </button>
+      <input type="range" class="volume" id="volume" min="0" max="100" value="70" aria-label="Volume">
+    </div>
+  </footer>
+</div>
+
+<!-- Palco: o iframe vive aqui e nunca é recriado ao trocar de tela -->
+<div class="stage" id="stage">
+  <div class="stage-bar">
+    <span class="grow" id="stage-label">Player</span>
+    <button id="stage-size" title="Diminuir" aria-label="Alternar tamanho">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3v6H3M15 21v-6h6"/></svg>
+    </button>
+  </div>
+  <div class="stage-frame">
+    <div id="yt-player"></div>
+    <div class="stage-idle">Sem faixa carregada</div>
+  </div>
+</div>
+
+<div class="pop" id="pop"></div>
+<div class="backdrop" id="backdrop">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3 id="modal-title">Nova playlist</h3>
+    <p id="modal-desc">Dê um nome para organizar suas faixas.</p>
+    <input id="modal-input" type="text" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-ghost" id="modal-cancel">Cancelar</button>
+      <button class="btn-primary" id="modal-ok">Criar</button>
+    </div>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+<div class="banner" id="banner-file">
+  Este arquivo foi aberto direto do disco (<code>file://</code>) — o player do YouTube não funciona nesse modo.
+  Sirva a pasta com um servidor local ou publique no GitHub Pages para as faixas tocarem de verdade.
+</div>
+
+<script>
+/* ==========================================================================
+   FITA
+   Player de música sobre a YouTube IFrame Player API.
+
+   O que é real aqui:
+   · Playlists criadas por você, salvas entre sessões
+   · Histórico de reprodução real
+   · Busca real no YouTube (usando uma chave da YouTube Data API v3 sua)
+   · Importação de playlists inteiras do YouTube, sem chave nenhuma
+   · Títulos e canais vindos do próprio YouTube (oEmbed + getVideoData)
+   · Fila reordenável por arrasto
+   · Controles de mídia do sistema operacional (Media Session API)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. PERSISTÊNCIA
+   Tenta o storage do ambiente de preview; se não existir, usa localStorage;
+   se nada funcionar, cai para memória. Você não precisa mudar nada ao hospedar.
+   -------------------------------------------------------------------------- */
+const memoria = {};
+const Store = {
+  async get(chave){
+    try{ if(window.storage){ const r = await window.storage.get(chave); if(r) return JSON.parse(r.value); } }catch{}
+    try{ const v = localStorage.getItem(chave); if(v != null) return JSON.parse(v); }catch{}
+    return memoria[chave] ?? null;
+  },
+  async set(chave, valor){
+    const s = JSON.stringify(valor);
+    memoria[chave] = valor;
+    try{ if(window.storage){ await window.storage.set(chave, s); return; } }catch{}
+    try{ localStorage.setItem(chave, s); }catch{}
+  }
+};
+const CHAVE_DB = 'fita:db:v1';
+
+/* --------------------------------------------------------------------------
+   1. EXTRAÇÃO DE ID E DE PLAYLIST
+   -------------------------------------------------------------------------- */
+const RE_ID = /^[A-Za-z0-9_-]{11}$/;
+const RE_LISTA = /^[A-Za-z0-9_-]{12,42}$/;
+
+function analisarLink(entrada){
+  const bruto = (entrada || '').trim();
+  if(!bruto) return {};
+  if(RE_ID.test(bruto)) return { video: bruto };
+
+  let url;
+  try{ url = new URL(/^https?:\/\//i.test(bruto) ? bruto : 'https://' + bruto.replace(/^\/+/, '')); }
+  catch{ return {}; }
+
+  const host = url.hostname.replace(/^www\./,'').toLowerCase();
+  const seg = url.pathname.split('/').filter(Boolean);
+  const res = {};
+
+  // Playlist vem como parâmetro ?list= em qualquer um dos formatos.
+  const lista = url.searchParams.get('list');
+  if(lista && RE_LISTA.test(lista) && !lista.startsWith('RD')) res.lista = lista;
+
+  if(host === 'youtu.be'){
+    if(RE_ID.test(seg[0] || '')) res.video = seg[0];
+    return res;
+  }
+  if(host === 'youtube.com' || host === 'm.youtube.com' || host === 'music.youtube.com' || host.endsWith('.youtube.com')){
+    const v = url.searchParams.get('v');
+    if(v && RE_ID.test(v)) res.video = v;
+    if(['embed','shorts','live','v'].includes(seg[0]) && RE_ID.test(seg[1] || '')) res.video = seg[1];
+  }
+  return res;
+}
+
+const capaDe = id => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+
+/* --------------------------------------------------------------------------
+   2. METADADOS REAIS VIA oEMBED
+   O endpoint oEmbed do YouTube é público e não precisa de chave. Devolve
+   título e canal. Se a rede bloquear, o título é corrigido depois que a
+   faixa toca, com player.getVideoData().
+   -------------------------------------------------------------------------- */
+const cacheMeta = new Map();
+
+async function buscarMetadados(id){
+  if(cacheMeta.has(id)) return cacheMeta.get(id);
+  const alvo = `https://www.youtube.com/oembed?url=${encodeURIComponent('https://www.youtube.com/watch?v=' + id)}&format=json`;
+  try{
+    const r = await fetch(alvo);
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    const meta = { titulo: d.title, autor: d.author_name || 'YouTube' };
+    cacheMeta.set(id, meta);
+    return meta;
+  }catch{
+    return null;   // silencioso de propósito: o player corrige depois
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. ESTADO
+   -------------------------------------------------------------------------- */
+const db = {
+  playlists: [],   // [{ id, nome, faixas:[{id,titulo,autor}], criadaEm }]
+  recentes: [],    // [{ id, titulo, autor, em }]
+  volume: 70,
+  apiKey: ''
+};
+
+const estado = {
+  fila: [],
+  indice: -1,
+  origem: 'Fila',      // de onde a fila atual veio (nome da playlist, busca, etc.)
+  tocando: false,
+  aleatorio: false,
+  repetir: 'off',
+  mudo: false,
+  arrastando: false,
+  pronto: false,
+  view: 'inicio',
+  playlistAberta: null,
+  resultados: [],
+  buscando: false,
+  termoBusca: ''
+};
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2, 10);
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* --------------------------------------------------------------------------
+   4. IFRAME API
+   -------------------------------------------------------------------------- */
+let player = null, pendente = null;
+
+(function(){
+  const tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+})();
+
+window.onYouTubeIframeAPIReady = function(){
+  player = new YT.Player('yt-player', {
+    width:'100%', height:'100%',
+    playerVars:{ controls:0, disablekb:1, modestbranding:1, rel:0, playsinline:1, iv_load_policy:3, fs:0 },
+    events:{ onReady:aoFicarPronto, onStateChange:aoMudarEstado, onError:aoDarErro }
+  });
+};
+
+function aoFicarPronto(){
+  estado.pronto = true;
+  player.setVolume(db.volume);
+  if(estado.mudo) player.mute();
+  if(pendente){ const p = pendente; pendente = null; p(); }
+}
+
+function aoMudarEstado(e){
+  const s = e.data;
+  if(s === YT.PlayerState.PLAYING){
+    estado.tocando = true;
+    $('#stage').classList.add('playing');
+    corrigirMetadados();
+    registrarRecente();
+  }else if(s === YT.PlayerState.PAUSED){
+    estado.tocando = false;
+  }else if(s === YT.PlayerState.ENDED){
+    estado.tocando = false;
+    proxima(true);
+  }
+  atualizarBotaoPlay();
+  atualizarMediaSession();
+}
+
+function aoDarErro(e){
+  const motivos = {
+    2:'Link inválido.', 5:'O player não conseguiu carregar esse vídeo.',
+    100:'Vídeo removido ou privado.',
+    101:'Esse vídeo não permite reprodução fora do YouTube.',
+    150:'Esse vídeo não permite reprodução fora do YouTube.'
+  };
+  avisar(motivos[e.data] || 'Não deu para tocar essa faixa.', true);
+  if(estado.fila.length > 1) setTimeout(() => proxima(true), 1400);
+}
+
+/* --------------------------------------------------------------------------
+   5. IMPORTAR PLAYLIST DO YOUTUBE (sem chave de API)
+   Truque: pedimos ao player para enfileirar a playlist e depois lemos
+   player.getPlaylist(), que devolve todos os IDs de vídeo. Em seguida
+   assumimos o controle com a nossa própria fila.
+   -------------------------------------------------------------------------- */
+function importarPlaylistDoYouTube(listaId){
+  return new Promise((resolve, reject) => {
+    const executar = () => {
+      player.cuePlaylist({ listType:'playlist', list:listaId });
+      let tentativas = 0;
+      const t = setInterval(() => {
+        const ids = player.getPlaylist && player.getPlaylist();
+        if(ids && ids.length){
+          clearInterval(t);
+          player.stopVideo();
+          resolve(ids.filter(id => RE_ID.test(id)));
+        }else if(++tentativas > 30){       // ~6 s
+          clearInterval(t);
+          reject(new Error('timeout'));
+        }
+      }, 200);
+    };
+    estado.pronto ? executar() : (pendente = executar);
+  });
+}
+
+/* --------------------------------------------------------------------------
+   6. FILA E REPRODUÇÃO
+   -------------------------------------------------------------------------- */
+function novaFaixa(id, titulo, autor){
+  return { id, titulo: titulo || 'Carregando…', autor: autor || 'YouTube' };
+}
+
+async function tocarLink(entrada){
+  const { video, lista } = analisarLink(entrada);
+
+  if(lista){
+    avisar('Importando a playlist…');
+    try{
+      const ids = await importarPlaylistDoYouTube(lista);
+      estado.fila = ids.map(id => novaFaixa(id));
+      estado.origem = 'Playlist do YouTube';
+      estado.indice = -1;
+      renderizar();
+      tocarIndice(video ? Math.max(0, ids.indexOf(video)) : 0);
+      enriquecerFila();
+      avisar(`${ids.length} faixas na fila.`);
+      return;
+    }catch{
+      avisar('Não consegui ler essa playlist. Talvez seja privada.', true);
+      if(!video) return;
+    }
+  }
+
+  if(!video){ avisar('Não reconheci esse link.', true); return; }
+
+  const jaEsta = estado.fila.findIndex(f => f.id === video);
+  if(jaEsta >= 0){ tocarIndice(jaEsta); return; }
+
+  const faixa = novaFaixa(video);
+  estado.fila.push(faixa);
+  tocarIndice(estado.fila.length - 1);
+  renderizar();
+
+  const meta = await buscarMetadados(video);
+  if(meta){ Object.assign(faixa, meta); renderizar(); atualizarPainel(); }
+}
+
+// Preenche título/canal das faixas ainda anônimas, em lotes de 6.
+async function enriquecerFila(){
+  const pendentes = estado.fila.filter(f => f.titulo === 'Carregando…');
+  for(let i = 0; i < pendentes.length; i += 6){
+    await Promise.all(pendentes.slice(i, i + 6).map(async f => {
+      const m = await buscarMetadados(f.id);
+      if(m) Object.assign(f, m);
+    }));
+    renderizar();
+    atualizarPainel();
+  }
+}
+
+function definirFila(faixas, origem, comecarEm = 0){
+  estado.fila = faixas.map(f => ({ ...f }));
+  estado.origem = origem;
+  estado.indice = -1;
+  tocarIndice(comecarEm);
+  renderizar();
+  enriquecerFila();
+}
+
+function tocarIndice(i){
+  if(i < 0 || i >= estado.fila.length) return;
+  estado.indice = i;
+  const faixa = estado.fila[i];
+  atualizarPainel();
+  renderizar();
+
+  const carregar = () => player.loadVideoById(faixa.id);
+  estado.pronto ? carregar() : (pendente = carregar);
+}
+
+function proxima(automatico = false){
+  if(!estado.fila.length) return;
+
+  if(automatico && estado.repetir === 'one'){
+    player.seekTo(0, true); player.playVideo(); return;
+  }
+  if(estado.aleatorio && estado.fila.length > 1){
+    let n; do { n = Math.floor(Math.random() * estado.fila.length); } while(n === estado.indice);
+    tocarIndice(n); return;
+  }
+  const n = estado.indice + 1;
+  if(n < estado.fila.length) tocarIndice(n);
+  else if(estado.repetir === 'all') tocarIndice(0);
+  else { estado.tocando = false; atualizarBotaoPlay(); }
+}
+
+function anterior(){
+  if(!estado.fila.length) return;
+  if(estado.pronto && player.getCurrentTime() > 3){ player.seekTo(0, true); return; }
+  tocarIndice(estado.indice - 1 >= 0 ? estado.indice - 1 : estado.fila.length - 1);
+}
+
+function alternarPlay(){
+  if(!estado.pronto || estado.indice < 0) return;
+  estado.tocando ? player.pauseVideo() : player.playVideo();
+}
+
+function removerDaFila(i){
+  const eraAtual = i === estado.indice;
+  estado.fila.splice(i, 1);
+  if(i < estado.indice) estado.indice--;
+  if(eraAtual){
+    if(estado.fila.length) tocarIndice(Math.min(i, estado.fila.length - 1));
+    else{
+      estado.indice = -1;
+      if(estado.pronto) player.stopVideo();
+      $('#stage').classList.remove('playing');
+      atualizarPainel();
+    }
+  }
+  renderizar();
+}
+
+function moverNaFila(de, para){
+  if(de === para) return;
+  const [f] = estado.fila.splice(de, 1);
+  estado.fila.splice(para, 0, f);
+  // Mantém o índice apontando para a faixa que está tocando de fato.
+  if(estado.indice === de) estado.indice = para;
+  else if(de < estado.indice && para >= estado.indice) estado.indice--;
+  else if(de > estado.indice && para <= estado.indice) estado.indice++;
+  renderizar();
+}
+
+/* Título e canal definitivos, direto do player. */
+function corrigirMetadados(){
+  if(!player.getVideoData) return;
+  const d = player.getVideoData();
+  const f = estado.fila[estado.indice];
+  if(!f || !d || !d.title) return;
+  if(f.titulo !== d.title || f.autor !== d.author){
+    f.titulo = d.title;
+    f.autor = d.author || 'YouTube';
+    cacheMeta.set(f.id, { titulo:f.titulo, autor:f.autor });
+    atualizarPainel();
+    renderizar();
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. BIBLIOTECA: PLAYLISTS E HISTÓRICO
+   -------------------------------------------------------------------------- */
+let ultimoRecente = null;
+
+function registrarRecente(){
+  const f = estado.fila[estado.indice];
+  if(!f || ultimoRecente === f.id) return;
+  ultimoRecente = f.id;
+  db.recentes = db.recentes.filter(r => r.id !== f.id);
+  db.recentes.unshift({ id:f.id, titulo:f.titulo, autor:f.autor, em:Date.now() });
+  db.recentes = db.recentes.slice(0, 60);
+  salvar();
+  if(estado.view === 'recentes') renderizar();
+}
+
+function criarPlaylist(nome, faixas = []){
+  const pl = { id: uid(), nome, faixas: faixas.map(f => ({ id:f.id, titulo:f.titulo, autor:f.autor })), criadaEm: Date.now() };
+  db.playlists.unshift(pl);
+  salvar(); renderizar();
+  return pl;
+}
+
+function adicionarNaPlaylist(playlistId, faixa){
+  const pl = db.playlists.find(p => p.id === playlistId);
+  if(!pl) return;
+  if(pl.faixas.some(f => f.id === faixa.id)){ avisar('Essa faixa já está em ' + pl.nome + '.'); return; }
+  pl.faixas.push({ id:faixa.id, titulo:faixa.titulo, autor:faixa.autor });
+  salvar(); renderizar();
+  avisar('Adicionada a ' + pl.nome + '.');
+}
+
+function removerDaPlaylist(playlistId, idx){
+  const pl = db.playlists.find(p => p.id === playlistId);
+  if(!pl) return;
+  pl.faixas.splice(idx, 1);
+  salvar(); renderizar();
+}
+
+function apagarPlaylist(playlistId){
+  db.playlists = db.playlists.filter(p => p.id !== playlistId);
+  if(estado.playlistAberta === playlistId){ estado.view = 'biblioteca'; estado.playlistAberta = null; }
+  salvar(); renderizar();
+}
+
+const salvar = () => Store.set(CHAVE_DB, db);
+
+/* --------------------------------------------------------------------------
+   8. BUSCA REAL (YouTube Data API v3)
+   Precisa de uma chave sua — a API não permite busca anônima. A chave fica
+   guardada só no seu navegador.
+   -------------------------------------------------------------------------- */
+async function buscar(termo){
+  if(!db.apiKey){ renderizar(); return; }
+  estado.buscando = true; estado.termoBusca = termo; renderizar();
+
+  const url = 'https://www.googleapis.com/youtube/v3/search'
+    + '?part=snippet&type=video&videoEmbeddable=true&maxResults=24'
+    + '&q=' + encodeURIComponent(termo) + '&key=' + encodeURIComponent(db.apiKey);
+
+  try{
+    const r = await fetch(url);
+    const d = await r.json();
+    if(d.error) throw new Error(d.error.message || 'erro');
+    estado.resultados = d.items.map(it => ({
+      id: it.id.videoId,
+      titulo: it.snippet.title.replace(/&(amp|quot|#39);/g, m => ({'&amp;':'&','&quot;':'"','&#39;':"'"}[m])),
+      autor: it.snippet.channelTitle
+    }));
+    estado.resultados.forEach(f => cacheMeta.set(f.id, { titulo:f.titulo, autor:f.autor }));
+  }catch(err){
+    estado.resultados = [];
+    avisar('A busca falhou: ' + err.message, true);
+  }finally{
+    estado.buscando = false; renderizar();
+  }
+}
+
+/* --------------------------------------------------------------------------
+   9. RENDERIZAÇÃO
+   -------------------------------------------------------------------------- */
+const ICO = {
+  play:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z"/></svg>',
+  mais:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  x:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>',
+  nota:'<svg width="46" height="46" viewBox="0 0 24 24" fill="currentColor"><path d="M20 3v12.5a3.5 3.5 0 1 1-2-3.16V7l-8 1.6v9.9a3.5 3.5 0 1 1-2-3.16V6l12-3Z"/></svg>',
+  arrasta:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9 5h2v2H9zM13 5h2v2h-2zM9 11h2v2H9zM13 11h2v2h-2zM9 17h2v2H9zM13 17h2v2h-2z"/></svg>'
+};
+
+function linhaFaixa(faixa, opcoes){
+  const { indice, tocandoAgora, arrastavel, acoes } = opcoes;
+  return `<div class="track${tocandoAgora ? ' playing' : ''}" data-i="${indice}" ${arrastavel ? 'draggable="true"' : ''}>
+    <span class="t-index">${arrastavel ? ICO.arrasta : indice + 1}</span>
+    <img src="${capaDe(faixa.id)}" alt="" loading="lazy">
+    <div class="t-meta">
+      <div class="t-title">${esc(faixa.titulo)}</div>
+      <div class="t-sub">${esc(faixa.autor)}</div>
+    </div>
+    <div class="t-actions">
+      ${acoes.map(a => `<button data-acao="${a.acao}" title="${a.titulo}" aria-label="${a.titulo}" class="${a.classe || ''}">${ICO[a.icone]}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderizar(){
+  renderizarSidebar();
+  const v = $('#view');
+
+  if(estado.view === 'inicio')      v.innerHTML = telaInicio();
+  else if(estado.view === 'busca')  v.innerHTML = telaBusca();
+  else if(estado.view === 'biblioteca') v.innerHTML = telaBiblioteca();
+  else if(estado.view === 'playlist')   v.innerHTML = telaPlaylist();
+  else if(estado.view === 'recentes')   v.innerHTML = telaRecentes();
+
+  ligarEventosDaView();
+  $$('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === estado.view));
+}
+
+function renderizarSidebar(){
+  const lista = $('#shelf-list');
+  const itens = [
+    `<button class="shelf-item ${estado.view==='recentes'?'active':''}" data-especial="recentes">
+       <span class="name">Tocadas recentemente</span><span class="count">${db.recentes.length}</span></button>`,
+    ...db.playlists.map(p => `<button class="shelf-item ${estado.playlistAberta===p.id?'active':''}" data-pl="${p.id}">
+       <span class="name">${esc(p.nome)}</span><span class="count">${p.faixas.length}</span></button>`)
+  ];
+  if(!db.playlists.length) itens.push('<p class="shelf-empty">Nenhuma playlist ainda.</p>');
+  lista.innerHTML = itens.join('');
+
+  lista.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => abrirPlaylist(b.dataset.pl));
+  lista.querySelectorAll('[data-especial]').forEach(b => b.onclick = () => { estado.view='recentes'; estado.playlistAberta=null; renderizar(); });
+}
+
+function telaInicio(){
+  const fila = estado.fila.length
+    ? `<div class="tracks" id="lista-fila">${estado.fila.map((f, i) => linhaFaixa(f, {
+        indice:i, tocandoAgora:i===estado.indice, arrastavel:true,
+        acoes:[{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'},{acao:'rm',icone:'x',titulo:'Remover da fila',classe:'rm'}]
+      })).join('')}</div>`
+    : `<div class="empty"><strong>A fila está vazia</strong>Cole um link acima ou abra uma playlist. As faixas entram aqui na ordem e você pode arrastar para reordenar.</div>`;
+
+  return `
+  <section class="hero">
+    <h1>Cole um link. Escute aqui mesmo.</h1>
+    <p class="lead">Um vídeo ou uma playlist inteira do YouTube. A faixa entra na fila e toca sem sair da página.</p>
+    <div class="paste">
+      <div class="field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+        <input id="url-input" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://www.youtube.com/watch?v=..." aria-label="Link do YouTube">
+      </div>
+      <button class="btn-primary" id="btn-tocar">${ICO.play} Tocar</button>
+    </div>
+    <p class="hint">Aceita <code>youtube.com/watch</code>, <code>youtu.be</code>, <code>/shorts</code>, <code>/embed</code> e links com <code>?list=</code> — nesse caso a playlist inteira entra na fila.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Fila · ${esc(estado.origem)}</h2>
+      <div class="tools">
+        ${estado.fila.length ? '<button data-acao="salvar-fila">Salvar como playlist</button><button data-acao="limpar-fila">Limpar</button>' : ''}
+      </div>
+    </div>
+    ${fila}
+  </section>`;
+}
+
+function telaBusca(){
+  if(!db.apiKey){
+    return `
+    <section class="hero"><h1>Buscar no YouTube</h1>
+      <p class="lead">A busca funciona de verdade, mas o YouTube exige uma chave de API própria. Ela fica salva só neste navegador e nunca sai daqui.</p>
+    </section>
+    <div class="key-box" style="margin-top:8px">
+      <h3>Configurar a chave</h3>
+      <ol>
+        <li>Abra o <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a> e crie um projeto.</li>
+        <li>Em "APIs e serviços", ative a <strong>YouTube Data API v3</strong>.</li>
+        <li>Em "Credenciais", crie uma chave de API e cole abaixo.</li>
+      </ol>
+      <div class="key-row">
+        <input id="api-key" type="password" placeholder="AIza..." autocomplete="off">
+        <button class="btn-primary" id="btn-salvar-key">Salvar chave</button>
+      </div>
+      <p class="hint" style="margin-top:14px">Sem chave, tudo o mais continua funcionando: colar links, importar playlists e montar a biblioteca.</p>
+    </div>`;
+  }
+
+  const corpo = estado.buscando
+    ? '<div class="empty"><span class="spinner"></span> Procurando…</div>'
+    : estado.resultados.length
+      ? `<div class="tracks" id="lista-busca">${estado.resultados.map((f,i) => linhaFaixa(f, {
+          indice:i, tocandoAgora:false, arrastavel:false,
+          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
+        })).join('')}</div>`
+      : estado.termoBusca
+        ? '<div class="empty"><strong>Nada encontrado</strong>Tente outro termo ou o nome do canal junto com o da música.</div>'
+        : '<div class="empty"><strong>Procure uma música</strong>Digite o nome da faixa, do artista ou do álbum.</div>';
+
+  return `
+  <section class="hero"><h1>Buscar</h1>
+    <div class="paste" style="margin-top:18px">
+      <div class="field">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="busca-input" type="search" placeholder="Nome da música ou do artista" value="${esc(estado.termoBusca)}" aria-label="Buscar">
+      </div>
+      <button class="btn-primary" id="btn-buscar">Buscar</button>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>Resultados</h2>
+      <div class="tools">${estado.resultados.length ? '<button data-acao="tocar-todos">Tocar tudo</button>' : ''}<button data-acao="trocar-key">Trocar chave</button></div>
+    </div>
+    ${corpo}
+  </section>`;
+}
+
+function telaBiblioteca(){
+  const cards = db.playlists.map(p => `
+    <button class="card" data-pl="${p.id}">
+      <div class="card-art">${p.faixas.length ? `<img src="${capaDe(p.faixas[0].id)}" alt="">` : ICO.nota}</div>
+      <div class="card-title">${esc(p.nome)}</div>
+      <div class="card-sub">${p.faixas.length} ${p.faixas.length === 1 ? 'faixa' : 'faixas'}</div>
+    </button>`).join('');
+
+  return `
+  <section class="hero"><h1>Sua biblioteca</h1>
+    <p class="lead">Tudo aqui fica salvo neste navegador entre as sessões.</p>
+    <button class="btn-primary" id="btn-criar-2" style="margin-top:4px">${ICO.mais} Criar playlist</button>
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>Playlists</h2></div>
+    ${db.playlists.length ? `<div class="grid">${cards}</div>`
+      : '<div class="empty"><strong>Nenhuma playlist ainda</strong>Crie uma e vá jogando faixas da fila ou da busca dentro dela.</div>'}
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>Tocadas recentemente</h2>
+      <div class="tools">${db.recentes.length ? '<button data-acao="ver-recentes">Ver todas</button>' : ''}</div>
+    </div>
+    ${db.recentes.length
+      ? `<div class="tracks" id="lista-recentes">${db.recentes.slice(0,6).map((f,i) => linhaFaixa(f, {
+          indice:i, tocandoAgora:false, arrastavel:false,
+          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
+        })).join('')}</div>`
+      : '<div class="empty">Nada tocado ainda.</div>'}
+  </section>`;
+}
+
+function telaPlaylist(){
+  const pl = db.playlists.find(p => p.id === estado.playlistAberta);
+  if(!pl){ estado.view = 'biblioteca'; return telaBiblioteca(); }
+
+  return `
+  <div class="pl-head">
+    <div class="pl-art">${pl.faixas.length ? `<img src="${capaDe(pl.faixas[0].id)}" alt="">` : ICO.nota}</div>
+    <div class="pl-info">
+      <div class="kicker">Playlist</div>
+      <h1>${esc(pl.nome)}</h1>
+      <div class="meta">${pl.faixas.length} ${pl.faixas.length === 1 ? 'faixa' : 'faixas'}</div>
+    </div>
+  </div>
+  <div class="pl-actions">
+    <button class="btn-primary" data-acao="tocar-pl" ${pl.faixas.length ? '' : 'disabled'}>${ICO.play} Tocar</button>
+    <button class="btn-ghost" data-acao="fila-pl" ${pl.faixas.length ? '' : 'disabled'}>Adicionar à fila</button>
+    <button class="btn-ghost" data-acao="renomear-pl">Renomear</button>
+    <button class="btn-ghost" data-acao="apagar-pl">Apagar</button>
+  </div>
+  ${pl.faixas.length
+    ? `<div class="tracks" id="lista-pl">${pl.faixas.map((f,i) => linhaFaixa(f, {
+        indice:i, tocandoAgora:estado.origem===pl.nome && estado.indice===i, arrastavel:false,
+        acoes:[{acao:'tocar-daqui',icone:'play',titulo:'Tocar a partir daqui'},{acao:'rm-pl',icone:'x',titulo:'Remover da playlist',classe:'rm'}]
+      })).join('')}</div>`
+    : '<div class="empty"><strong>Playlist vazia</strong>Use o botão + em qualquer faixa da fila, da busca ou do histórico para trazê-la para cá.</div>'}`;
+}
+
+function telaRecentes(){
+  return `
+  <section class="hero"><h1>Tocadas recentemente</h1>
+    <p class="lead">As últimas ${db.recentes.length} faixas que passaram por aqui.</p>
+    ${db.recentes.length ? '<div class="pl-actions" style="margin-top:14px"><button class="btn-primary" data-acao="tocar-recentes">'+ICO.play+' Tocar tudo</button><button class="btn-ghost" data-acao="limpar-recentes">Limpar histórico</button></div>' : ''}
+  </section>
+  <section class="section">
+    ${db.recentes.length
+      ? `<div class="tracks" id="lista-recentes">${db.recentes.map((f,i) => linhaFaixa(f, {
+          indice:i, tocandoAgora:false, arrastavel:false,
+          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
+        })).join('')}</div>`
+      : '<div class="empty"><strong>Histórico vazio</strong>Toque alguma coisa e ela aparece aqui.</div>'}
+  </section>`;
+}
+
+/* --------------------------------------------------------------------------
+   10. EVENTOS DAS TELAS
+   -------------------------------------------------------------------------- */
+function ligarEventosDaView(){
+  const v = $('#view');
+
+  // --- Início
+  const input = $('#url-input');
+  if(input){
+    const disparar = () => { const t = input.value; input.value = ''; tocarLink(t); };
+    $('#btn-tocar').onclick = disparar;
+    input.onkeydown = e => { if(e.key === 'Enter') disparar(); };
+    input.onpaste = e => {
+      const texto = (e.clipboardData || window.clipboardData).getData('text');
+      const { video, lista } = analisarLink(texto);
+      if(video || lista){ e.preventDefault(); tocarLink(texto); }
+    };
+  }
+
+  // --- Busca
+  const bInput = $('#busca-input');
+  if(bInput){
+    const ir = () => bInput.value.trim() && buscar(bInput.value.trim());
+    $('#btn-buscar').onclick = ir;
+    bInput.onkeydown = e => { if(e.key === 'Enter') ir(); };
+  }
+  if($('#btn-salvar-key')){
+    $('#btn-salvar-key').onclick = () => {
+      const k = $('#api-key').value.trim();
+      if(!k){ avisar('Cole a chave antes de salvar.', true); return; }
+      db.apiKey = k; salvar(); renderizar(); avisar('Chave salva. Pode buscar.');
+    };
+  }
+  if($('#btn-criar-2')) $('#btn-criar-2').onclick = pedirNovaPlaylist;
+
+  // --- Ações gerais por data-acao
+  v.querySelectorAll('[data-acao]').forEach(b => {
+    if(b.closest('.track')) return;   // ações de faixa são tratadas abaixo
+    b.onclick = () => acaoGeral(b.dataset.acao);
+  });
+
+  // --- Cards de playlist
+  v.querySelectorAll('.card[data-pl]').forEach(c => c.onclick = () => abrirPlaylist(c.dataset.pl));
+
+  // --- Listas de faixas
+  ligarLista($('#lista-fila'),      i => tocarIndice(i), 'fila');
+  ligarLista($('#lista-busca'),     i => definirFila(estado.resultados, 'Busca: ' + estado.termoBusca, i), 'busca');
+  ligarLista($('#lista-recentes'),  i => definirFila(db.recentes, 'Tocadas recentemente', i), 'recentes');
+  ligarLista($('#lista-pl'),        i => {
+    const pl = db.playlists.find(p => p.id === estado.playlistAberta);
+    definirFila(pl.faixas, pl.nome, i);
+  }, 'playlist');
+}
+
+function fonteDaLista(tipo){
+  if(tipo === 'fila') return estado.fila;
+  if(tipo === 'busca') return estado.resultados;
+  if(tipo === 'recentes') return db.recentes;
+  if(tipo === 'playlist') return (db.playlists.find(p => p.id === estado.playlistAberta) || {}).faixas || [];
+  return [];
+}
+
+function ligarLista(container, aoClicar, tipo){
+  if(!container) return;
+
+  container.querySelectorAll('.track').forEach(linha => {
+    const i = Number(linha.dataset.i);
+
+    linha.onclick = e => {
+      const btn = e.target.closest('[data-acao]');
+      if(!btn){ aoClicar(i); return; }
+      e.stopPropagation();
+      const faixa = fonteDaLista(tipo)[i];
+      switch(btn.dataset.acao){
+        case 'tocar':       definirFila(fonteDaLista(tipo), rotuloDaFonte(tipo), i); break;
+        case 'tocar-daqui': aoClicar(i); break;
+        case 'rm':          removerDaFila(i); break;
+        case 'rm-pl':       removerDaPlaylist(estado.playlistAberta, i); break;
+        case 'add':         abrirMenuPlaylists(btn, faixa); break;
+      }
+    };
+
+    // Arrastar para reordenar (só na fila)
+    if(linha.draggable){
+      linha.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', String(i));
+        e.dataTransfer.effectAllowed = 'move';
+        linha.classList.add('dragging');
+      });
+      linha.addEventListener('dragend',   () => linha.classList.remove('dragging'));
+      linha.addEventListener('dragover',  e => { e.preventDefault(); linha.classList.add('drag-over'); });
+      linha.addEventListener('dragleave', () => linha.classList.remove('drag-over'));
+      linha.addEventListener('drop', e => {
+        e.preventDefault();
+        linha.classList.remove('drag-over');
+        moverNaFila(Number(e.dataTransfer.getData('text/plain')), i);
+      });
+    }
+  });
+}
+
+const rotuloDaFonte = tipo => ({
+  fila:'Fila', busca:'Busca: ' + estado.termoBusca, recentes:'Tocadas recentemente',
+  playlist:(db.playlists.find(p => p.id === estado.playlistAberta) || {}).nome || 'Playlist'
+}[tipo]);
+
+function acaoGeral(acao){
+  const pl = db.playlists.find(p => p.id === estado.playlistAberta);
+  switch(acao){
+    case 'limpar-fila':
+      estado.fila = []; estado.indice = -1;
+      if(estado.pronto) player.stopVideo();
+      $('#stage').classList.remove('playing');
+      atualizarPainel(); renderizar();
+      break;
+    case 'salvar-fila':
+      pedirNovaPlaylist(estado.fila);
+      break;
+    case 'ver-recentes':
+      estado.view = 'recentes'; estado.playlistAberta = null; renderizar();
+      break;
+    case 'tocar-recentes':
+      definirFila(db.recentes, 'Tocadas recentemente', 0);
+      break;
+    case 'limpar-recentes':
+      db.recentes = []; ultimoRecente = null; salvar(); renderizar();
+      break;
+    case 'tocar-todos':
+      definirFila(estado.resultados, 'Busca: ' + estado.termoBusca, 0);
+      break;
+    case 'trocar-key':
+      db.apiKey = ''; salvar(); renderizar();
+      break;
+    case 'tocar-pl':
+      definirFila(pl.faixas, pl.nome, 0);
+      break;
+    case 'fila-pl':
+      pl.faixas.forEach(f => { if(!estado.fila.some(x => x.id === f.id)) estado.fila.push({ ...f }); });
+      renderizar(); avisar('Faixas adicionadas à fila.');
+      break;
+    case 'renomear-pl':
+      abrirModal('Renomear playlist', 'Como você quer chamar essa coleção?', pl.nome, 'Salvar', nome => {
+        pl.nome = nome; salvar(); renderizar();
+      });
+      break;
+    case 'apagar-pl':
+      apagarPlaylist(pl.id);
+      avisar('Playlist apagada.');
+      break;
+  }
+}
+
+function abrirPlaylist(id){
+  estado.view = 'playlist'; estado.playlistAberta = id;
+  $('#main').scrollTop = 0;
+  renderizar();
+}
+
+/* --------------------------------------------------------------------------
+   11. POPOVER "ADICIONAR A UMA PLAYLIST"
+   -------------------------------------------------------------------------- */
+const pop = $('#pop');
+
+function abrirMenuPlaylists(âncora, faixa){
+  const itens = db.playlists.map(p =>
+    `<button data-pl="${p.id}"><span>${esc(p.nome)}</span></button>`).join('');
+
+  pop.innerHTML = `
+    <div class="label">Adicionar a</div>
+    <div class="scroll">${itens || '<div class="label" style="padding-bottom:8px">Nenhuma playlist ainda</div>'}</div>
+    <div class="sep"></div>
+    <button data-nova="1">${ICO.mais} Nova playlist</button>`;
+
+  const r = âncora.getBoundingClientRect();
+  pop.classList.add('open');
+  const largura = pop.offsetWidth, altura = pop.offsetHeight;
+  pop.style.left = Math.max(10, Math.min(r.left - largura + r.width, innerWidth - largura - 10)) + 'px';
+  pop.style.top  = (r.bottom + altura + 10 > innerHeight ? r.top - altura - 6 : r.bottom + 6) + 'px';
+
+  pop.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => {
+    adicionarNaPlaylist(b.dataset.pl, faixa); fecharPop();
+  });
+  const nova = pop.querySelector('[data-nova]');
+  if(nova) nova.onclick = () => { fecharPop(); pedirNovaPlaylist([faixa]); };
+}
+
+const fecharPop = () => pop.classList.remove('open');
+document.addEventListener('click', e => { if(!pop.contains(e.target) && !e.target.closest('[data-acao="add"]')) fecharPop(); });
+document.addEventListener('scroll', fecharPop, true);
+
+/* --------------------------------------------------------------------------
+   12. MODAL
+   -------------------------------------------------------------------------- */
+let confirmarModal = null;
+
+function abrirModal(titulo, descricao, valor, rotuloOk, aoConfirmar){
+  $('#modal-title').textContent = titulo;
+  $('#modal-desc').textContent = descricao;
+  $('#modal-input').value = valor || '';
+  $('#modal-ok').textContent = rotuloOk;
+  confirmarModal = aoConfirmar;
+  $('#backdrop').classList.add('open');
+  setTimeout(() => $('#modal-input').select(), 30);
+}
+function fecharModal(){ $('#backdrop').classList.remove('open'); confirmarModal = null; }
+
+$('#modal-cancel').onclick = fecharModal;
+$('#backdrop').onclick = e => { if(e.target === $('#backdrop')) fecharModal(); };
+$('#modal-ok').onclick = () => {
+  const val = $('#modal-input').value.trim();
+  if(!val) return;
+  confirmarModal && confirmarModal(val);
+  fecharModal();
+};
+$('#modal-input').onkeydown = e => { if(e.key === 'Enter') $('#modal-ok').click(); };
+
+function pedirNovaPlaylist(faixas = []){
+  const sugestao = faixas.length ? 'Fila de ' + new Date().toLocaleDateString('pt-BR') : 'Minha playlist';
+  abrirModal('Nova playlist', 'Dê um nome para organizar suas faixas.', sugestao, 'Criar', nome => {
+    const pl = criarPlaylist(nome, faixas);
+    avisar(faixas.length ? `${faixas.length} faixas salvas em ${nome}.` : 'Playlist criada.');
+    if(!faixas.length) abrirPlaylist(pl.id);
+  });
+}
+
+$('#btn-nova-playlist').onclick = () => pedirNovaPlaylist();
+
+/* --------------------------------------------------------------------------
+   13. PAINEL DO PLAYER
+   -------------------------------------------------------------------------- */
+function atualizarPainel(){
+  const f = estado.fila[estado.indice];
+  if(!f){
+    $('#now-title').textContent = 'Nada tocando';
+    $('#now-sub').textContent = 'Cole um link para começar';
+    $('#now-art').removeAttribute('src');
+    $('#t-cur').textContent = $('#t-tot').textContent = '0:00';
+    $('#stage-label').textContent = 'Player';
+    preencher($('#seek'), 0);
+    document.title = 'Fita';
+    return;
+  }
+  $('#now-title').textContent = f.titulo;
+  $('#now-sub').textContent = f.autor;
+  $('#now-art').src = capaDe(f.id);
+  $('#stage-label').textContent = f.titulo;
+  document.title = f.titulo + ' · Fita';
+  atualizarMediaSession();
+}
+
+function atualizarMediaSession(){
+  if(!('mediaSession' in navigator)) return;
+  const f = estado.fila[estado.indice];
+  if(!f) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: f.titulo, artist: f.autor, album: estado.origem,
+    artwork: [{ src: capaDe(f.id), sizes:'320x180', type:'image/jpeg' }]
+  });
+  navigator.mediaSession.playbackState = estado.tocando ? 'playing' : 'paused';
+}
+
+if('mediaSession' in navigator){
+  navigator.mediaSession.setActionHandler('play', () => player && player.playVideo());
+  navigator.mediaSession.setActionHandler('pause', () => player && player.pauseVideo());
+  navigator.mediaSession.setActionHandler('previoustrack', anterior);
+  navigator.mediaSession.setActionHandler('nexttrack', () => proxima());
+}
+
+function atualizarBotaoPlay(){
+  $('#icon-play').style.display  = estado.tocando ? 'none' : '';
+  $('#icon-pause').style.display = estado.tocando ? '' : 'none';
+  $('#btn-toggle').setAttribute('aria-label', estado.tocando ? 'Pausar' : 'Tocar');
+  $('#btn-toggle').title = estado.tocando ? 'Pausar' : 'Tocar';
+}
+
+const formatarTempo = seg => {
+  if(!isFinite(seg) || seg < 0) seg = 0;
+  return `${Math.floor(seg/60)}:${String(Math.floor(seg%60)).padStart(2,'0')}`;
+};
+const preencher = (slider, pct) => slider.style.setProperty('--fill', pct + '%');
+
+function avisar(mensagem, erro = false){
+  const t = document.createElement('div');
+  t.className = 'toast' + (erro ? ' err' : '');
+  t.textContent = mensagem;
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+/* Loop de progresso */
+setInterval(() => {
+  if(!estado.pronto || !player.getDuration) return;
+  const total = player.getDuration();
+  if(!total) return;
+  $('#t-tot').textContent = formatarTempo(total);
+  if(estado.arrastando) return;
+  const atual = player.getCurrentTime();
+  $('#t-cur').textContent = formatarTempo(atual);
+  const pct = (atual / total) * 100;
+  $('#seek').value = pct;
+  preencher($('#seek'), pct);
+}, 250);
+
+/* --------------------------------------------------------------------------
+   14. CONTROLES
+   -------------------------------------------------------------------------- */
+$('#btn-toggle').onclick = alternarPlay;
+$('#btn-next').onclick = () => proxima();
+$('#btn-prev').onclick = anterior;
+$('#btn-queue').onclick = () => { estado.view = 'inicio'; estado.playlistAberta = null; renderizar(); $('#main').scrollTo({ top: 400, behavior:'smooth' }); };
+
+$('#btn-shuffle').onclick = () => {
+  estado.aleatorio = !estado.aleatorio;
+  $('#btn-shuffle').setAttribute('aria-pressed', String(estado.aleatorio));
+  avisar(estado.aleatorio ? 'Modo aleatório ligado.' : 'Modo aleatório desligado.');
+};
+
+$('#btn-repeat').onclick = () => {
+  estado.repetir = estado.repetir === 'off' ? 'all' : estado.repetir === 'all' ? 'one' : 'off';
+  $('#btn-repeat').setAttribute('aria-pressed', String(estado.repetir !== 'off'));
+  $('#repeat-one').style.display = estado.repetir === 'one' ? 'block' : 'none';
+  $('#btn-repeat').title = { off:'Repetir', all:'Repetir tudo', one:'Repetir uma' }[estado.repetir];
+};
+
+const seek = $('#seek');
+seek.addEventListener('pointerdown', () => estado.arrastando = true);
+seek.addEventListener('input', () => {
+  preencher(seek, seek.value);
+  if(estado.pronto && player.getDuration) $('#t-cur').textContent = formatarTempo(player.getDuration() * seek.value / 100);
+});
+seek.addEventListener('change', () => {
+  if(estado.pronto && player.getDuration) player.seekTo(player.getDuration() * seek.value / 100, true);
+  estado.arrastando = false;
+});
+
+const vol = $('#volume');
+vol.addEventListener('input', () => {
+  db.volume = Number(vol.value);
+  estado.mudo = db.volume === 0;
+  if(estado.pronto){ player.setVolume(db.volume); estado.mudo ? player.mute() : player.unMute(); }
+  preencher(vol, db.volume);
+  atualizarIconeVolume();
+  salvar();
+});
+
+$('#btn-mute').onclick = () => {
+  estado.mudo = !estado.mudo;
+  if(estado.pronto) estado.mudo ? player.mute() : player.unMute();
+  atualizarIconeVolume();
+};
+
+function atualizarIconeVolume(){
+  $('#icon-vol').style.display   = estado.mudo ? 'none' : '';
+  $('#icon-muted').style.display = estado.mudo ? '' : 'none';
+  $('#btn-mute').setAttribute('aria-label', estado.mudo ? 'Ativar som' : 'Silenciar');
+}
+
+$('#stage-size').onclick = () => $('#stage').classList.toggle('small');
+
+$$('#nav button').forEach(b => b.onclick = () => {
+  estado.view = b.dataset.view;
+  estado.playlistAberta = null;
+  $('#main').scrollTop = 0;
+  renderizar();
+  if(estado.view === 'busca') setTimeout(() => { const i = $('#busca-input') || $('#api-key'); i && i.focus(); }, 40);
+});
+
+/* Atalhos — ignorados quando o foco está em um campo */
+document.addEventListener('keydown', e => {
+  if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if(e.code === 'Space'){ e.preventDefault(); alternarPlay(); }
+  if(e.code === 'ArrowRight' && estado.pronto) player.seekTo(player.getCurrentTime() + 5, true);
+  if(e.code === 'ArrowLeft'  && estado.pronto) player.seekTo(Math.max(0, player.getCurrentTime() - 5), true);
+  if(e.key.toLowerCase() === 'm') $('#btn-mute').click();
+  if(e.key.toLowerCase() === 'n') proxima();
+  if(e.key === 'Escape'){ fecharPop(); fecharModal(); }
+});
+
+/* --------------------------------------------------------------------------
+   15. BOOT
+   -------------------------------------------------------------------------- */
+(async function iniciar(){
+  // A API do YouTube exige origem http(s); sob file:// o postMessage falha
+  // silenciosamente e toda faixa parece "quebrada". Avisamos antes de tentar.
+  if(location.protocol === 'file:') $('#banner-file').classList.add('show');
+
+  const salvo = await Store.get(CHAVE_DB);
+  if(salvo) Object.assign(db, salvo);
+
+  vol.value = db.volume;
+  preencher(vol, db.volume);
+  preencher(seek, 0);
+  atualizarIconeVolume();
+  renderizar();
+  atualizarPainel();
+  setTimeout(() => { const i = $('#url-input'); i && i.focus(); }, 60);
+})();
+
+/* --------------------------------------------------------------------------
+   NOTA SOBRE OS TERMOS DO YOUTUBE
+   A API exige que o player embutido continue visível e que áudio e vídeo não
+   sejam separados. Por isso o palco flutuante existe e só encolhe, nunca
+   some. Além de ser a regra, é o que mantém a reprodução viva: com
+   display:none vários navegadores suspendem o iframe.
+   -------------------------------------------------------------------------- */
+</script>
+</body>
+</html>
