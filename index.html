@@ -109,7 +109,13 @@ input{font:inherit}
 .track.playing .t-title{color:var(--accent)}
 .track.drag-over{box-shadow:inset 0 2px 0 var(--accent)}
 .track.dragging{opacity:.4}
-.t-index{width:22px;text-align:right;font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;flex:none}
+.t-index{width:22px;text-align:right;font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;flex:none;display:flex;justify-content:flex-end}
+.eq{display:flex;align-items:flex-end;gap:2px;width:14px;height:14px}
+.eq span{flex:1;background:var(--accent);border-radius:1px;animation:eq .9s ease-in-out infinite}
+.eq span:nth-child(1){animation-delay:-.6s}
+.eq span:nth-child(2){animation-delay:-.3s}
+.eq.paused span{animation-play-state:paused;height:35%}
+@keyframes eq{0%,100%{height:30%}50%{height:100%}}
 .track img{width:44px;height:44px;border-radius:5px;object-fit:cover;background:var(--elev-2);flex:none}
 .t-meta{min-width:0;flex:1}
 .t-title{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -164,6 +170,11 @@ input{font:inherit}
 .stage-bar .grow{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stage-bar button{color:var(--muted);padding:4px;border-radius:4px;display:grid;place-items:center}
 .stage-bar button:hover{color:var(--text)}
+.reels{display:flex;gap:3px;flex:none}
+.reels circle.hub{fill:var(--bg)}
+.reels .reel{transform-box:fill-box;transform-origin:50% 50%;animation:girar 2.4s linear infinite;animation-play-state:paused}
+.stage.playing .reels .reel{animation-play-state:running}
+@keyframes girar{to{transform:rotate(360deg)}}
 .stage-frame{aspect-ratio:16/9;position:relative}
 .stage-frame iframe{width:100%;height:100%;border:0;display:block}
 .stage.small{width:212px}
@@ -222,6 +233,10 @@ input[type=range]:hover{--fc:var(--accent)}
 .modal input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--text);padding:12px 14px;margin-bottom:18px}
 .modal input:focus{outline:none;border-color:var(--accent)}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px}
+.shortcuts{display:flex;flex-direction:column;gap:2px;margin-bottom:4px}
+.shortcuts li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 2px;font-size:14px;border-bottom:1px solid var(--line)}
+.shortcuts li:last-child{border-bottom:0}
+.shortcuts kbd{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:3px 8px;font-size:12.5px;font-family:inherit;color:var(--text);white-space:nowrap}
 
 .banner{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--danger);color:#2a0f0b;font-size:13.5px;font-weight:600;padding:10px 18px;text-align:center;display:none}
 .banner a{color:#2a0f0b;text-decoration:underline}
@@ -260,6 +275,9 @@ input[type=range]:hover{--fc:var(--accent)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Zm4 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8 1h6v2H9v-2Z"/></svg>
       </span>
       <span class="brand-name">Fita</span>
+      <button id="btn-ajuda" title="Atalhos de teclado" aria-label="Atalhos de teclado" style="margin-left:auto;color:var(--muted);padding:6px;border-radius:5px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-2 1.8-2 3.5"/><path d="M12 17h.01"/></svg>
+      </button>
     </div>
 
     <nav class="nav" id="nav">
@@ -344,6 +362,10 @@ input[type=range]:hover{--fc:var(--accent)}
 <!-- Palco: o iframe vive aqui e nunca é recriado ao trocar de tela -->
 <div class="stage" id="stage">
   <div class="stage-bar">
+    <svg class="reels" width="28" height="14" viewBox="0 0 28 14" aria-hidden="true">
+      <g class="reel"><circle cx="7" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle class="hub" cx="7" cy="7" r="2"/></g>
+      <g class="reel"><circle cx="21" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle class="hub" cx="21" cy="7" r="2"/></g>
+    </svg>
     <span class="grow" id="stage-label">Player</span>
     <button id="stage-size" title="Diminuir" aria-label="Alternar tamanho">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 3v6H3M15 21v-6h6"/></svg>
@@ -364,6 +386,24 @@ input[type=range]:hover{--fc:var(--accent)}
     <div class="modal-actions">
       <button class="btn-ghost" id="modal-cancel">Cancelar</button>
       <button class="btn-primary" id="modal-ok">Criar</button>
+    </div>
+  </div>
+</div>
+<div class="backdrop" id="backdrop-ajuda">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Atalhos de teclado">
+    <h3>Atalhos de teclado</h3>
+    <p>Funcionam quando o foco não está em um campo de texto.</p>
+    <ul class="shortcuts">
+      <li>Tocar / pausar <kbd>Espaço</kbd></li>
+      <li>Avançar 5 segundos <kbd>→</kbd></li>
+      <li>Voltar 5 segundos <kbd>←</kbd></li>
+      <li>Próxima faixa <kbd>N</kbd></li>
+      <li>Silenciar <kbd>M</kbd></li>
+      <li>Fechar janelas <kbd>Esc</kbd></li>
+      <li>Esta ajuda <kbd>?</kbd></li>
+    </ul>
+    <div class="modal-actions">
+      <button class="btn-primary" id="ajuda-fechar">Entendi</button>
     </div>
   </div>
 </div>
@@ -637,6 +677,35 @@ async function enriquecerFila(){
   }
 }
 
+// Cole vários links (ou uma lista deles) de uma vez: cada linha/token válido
+// entra na fila na ordem em que apareceu; o primeiro começa a tocar se nada
+// estiver tocando ainda.
+async function colarVarios(tokens){
+  const analisados = tokens.map(analisarLink).filter(r => r.video || r.lista);
+  if(!analisados.length){ avisar('Nenhum link do YouTube reconhecido nesse texto.', true); return; }
+
+  avisar(`Adicionando ${analisados.length} ${analisados.length === 1 ? 'link' : 'links'}…`);
+  let adicionadas = 0;
+
+  for(const r of analisados){
+    if(r.lista){
+      try{
+        const ids = await importarPlaylistDoYouTube(r.lista);
+        ids.forEach(id => { if(!estado.fila.some(f => f.id === id)){ estado.fila.push(novaFaixa(id)); adicionadas++; } });
+      }catch{ /* playlist privada ou indisponível — segue para a próxima */ }
+    }else if(!estado.fila.some(f => f.id === r.video)){
+      estado.fila.push(novaFaixa(r.video));
+      adicionadas++;
+    }
+  }
+
+  if(estado.indice < 0 && estado.fila.length) tocarIndice(0);
+  else { renderizar(); salvarSessao(); }
+
+  avisar(`${adicionadas} ${adicionadas === 1 ? 'faixa adicionada' : 'faixas adicionadas'} à fila.`);
+  enriquecerFila();
+}
+
 function definirFila(faixas, origem, comecarEm = 0){
   estado.fila = faixas.map(f => ({ ...f }));
   estado.origem = origem;
@@ -652,6 +721,7 @@ function tocarIndice(i){
   const faixa = estado.fila[i];
   atualizarPainel();
   renderizar();
+  salvarSessao();
 
   const carregar = () => player.loadVideoById(faixa.id);
   estado.pronto ? carregar() : (pendente = carregar);
@@ -698,6 +768,7 @@ function removerDaFila(i){
     }
   }
   renderizar();
+  salvarSessao();
 }
 
 function moverNaFila(de, para){
@@ -709,6 +780,31 @@ function moverNaFila(de, para){
   else if(de < estado.indice && para >= estado.indice) estado.indice--;
   else if(de > estado.indice && para <= estado.indice) estado.indice++;
   renderizar();
+  salvarSessao();
+}
+
+/* Adiciona ao fim da fila sem interromper o que está tocando.
+   Se nada estiver tocando, começa a tocar essa faixa. */
+function adicionarAoFim(faixa){
+  if(estado.fila.some(f => f.id === faixa.id)){ avisar('Essa faixa já está na fila.'); return; }
+  estado.fila.push({ ...faixa });
+  if(estado.indice < 0) tocarIndice(estado.fila.length - 1);
+  else { renderizar(); salvarSessao(); avisar('Adicionada ao fim da fila.'); }
+}
+
+/* Insere logo após a faixa atual — toca em seguida, sem cortar a atual. */
+function adicionarASeguir(faixa){
+  const jaEsta = estado.fila.findIndex(f => f.id === faixa.id);
+  if(jaEsta >= 0 && jaEsta !== estado.indice + 1){
+    const [f] = estado.fila.splice(jaEsta, 1);
+    const alvo = jaEsta < estado.indice ? estado.indice : estado.indice + 1;
+    estado.fila.splice(alvo, 0, f);
+    if(jaEsta < estado.indice) estado.indice--;
+  }else if(jaEsta < 0){
+    estado.fila.splice(estado.indice + 1, 0, { ...faixa });
+  }
+  if(estado.indice < 0) tocarIndice(0);
+  else { renderizar(); salvarSessao(); avisar('Vai tocar em seguida.'); }
 }
 
 /* Título e canal definitivos, direto do player. */
@@ -725,6 +821,39 @@ function corrigirMetadados(){
     renderizar();
   }
 }
+
+/* --------------------------------------------------------------------------
+   6b. SESSÃO — retomar de onde parou
+   Guarda a fila, o índice e a origem a cada mudança relevante. No próximo
+   carregamento, a faixa é preparada com cueVideoById (não toca sozinha),
+   só retoma o áudio quando a pessoa aperta play de novo.
+   -------------------------------------------------------------------------- */
+const CHAVE_SESSAO = 'fita:sessao:v1';
+let sessaoRestaurada = false;
+
+function salvarSessao(){
+  if(!sessaoRestaurada) return;   // evita sobrescrever antes de restaurar a anterior
+  Store.set(CHAVE_SESSAO, { fila: estado.fila, indice: estado.indice, origem: estado.origem });
+}
+
+async function restaurarSessao(){
+  const s = await Store.get(CHAVE_SESSAO);
+  if(s && Array.isArray(s.fila) && s.fila.length){
+    estado.fila = s.fila;
+    estado.indice = Math.min(s.indice ?? 0, s.fila.length - 1);
+    estado.origem = s.origem || 'Fila';
+    atualizarPainel();
+    renderizar();
+    const faixa = estado.fila[estado.indice];
+    if(faixa){
+      const preparar = () => player.cueVideoById(faixa.id);   // carrega sem autoplay
+      estado.pronto ? preparar() : (pendente = preparar);
+    }
+  }
+  sessaoRestaurada = true;
+}
+
+
 
 /* --------------------------------------------------------------------------
    7. BIBLIOTECA: PLAYLISTS E HISTÓRICO
@@ -812,13 +941,19 @@ const ICO = {
   mais:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   x:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>',
   nota:'<svg width="46" height="46" viewBox="0 0 24 24" fill="currentColor"><path d="M20 3v12.5a3.5 3.5 0 1 1-2-3.16V7l-8 1.6v9.9a3.5 3.5 0 1 1-2-3.16V6l12-3Z"/></svg>',
-  arrasta:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9 5h2v2H9zM13 5h2v2h-2zM9 11h2v2H9zM13 11h2v2h-2zM9 17h2v2H9zM13 17h2v2h-2z"/></svg>'
+  arrasta:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9 5h2v2H9zM13 5h2v2h-2zM9 11h2v2H9zM13 11h2v2h-2zM9 17h2v2H9zM13 17h2v2h-2z"/></svg>',
+  fila:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h11M4 12h7M4 18h4"/><path d="M17 14v6M20 17h-6"/></svg>',
+  seguir:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v9a2 2 0 0 0 2 2h9"/><path d="m11 11 4 4-4 4"/></svg>'
 };
 
 function linhaFaixa(faixa, opcoes){
-  const { indice, tocandoAgora, arrastavel, acoes } = opcoes;
+  const { indice, tocandoAgora, arrastavel, acoes, emReproducao } = opcoes;
+  const indicador = tocandoAgora
+    ? `<span class="eq${emReproducao ? '' : ' paused'}"><span></span><span></span><span></span></span>`
+    : arrastavel ? ICO.arrasta : indice + 1;
+
   return `<div class="track${tocandoAgora ? ' playing' : ''}" data-i="${indice}" ${arrastavel ? 'draggable="true"' : ''}>
-    <span class="t-index">${arrastavel ? ICO.arrasta : indice + 1}</span>
+    <span class="t-index">${indicador}</span>
     <img src="${capaDe(faixa.id)}" alt="" loading="lazy">
     <div class="t-meta">
       <div class="t-title">${esc(faixa.titulo)}</div>
@@ -918,7 +1053,7 @@ function telaBusca(){
     : estado.resultados.length
       ? `<div class="tracks" id="lista-busca">${estado.resultados.map((f,i) => linhaFaixa(f, {
           indice:i, tocandoAgora:false, arrastavel:false,
-          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
+          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'seguir',icone:'seguir',titulo:'Tocar a seguir'},{acao:'filaAdd',icone:'fila',titulo:'Adicionar à fila'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
         })).join('')}</div>`
       : estado.termoBusca
         ? '<div class="empty"><strong>Nada encontrado</strong>Tente outro termo ou o nome do canal junto com o da música.</div>'
@@ -967,7 +1102,7 @@ function telaBiblioteca(){
     ${db.recentes.length
       ? `<div class="tracks" id="lista-recentes">${db.recentes.slice(0,6).map((f,i) => linhaFaixa(f, {
           indice:i, tocandoAgora:false, arrastavel:false,
-          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
+          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'seguir',icone:'seguir',titulo:'Tocar a seguir'},{acao:'filaAdd',icone:'fila',titulo:'Adicionar à fila'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
         })).join('')}</div>`
       : '<div class="empty">Nada tocado ainda.</div>'}
   </section>`;
@@ -994,8 +1129,8 @@ function telaPlaylist(){
   </div>
   ${pl.faixas.length
     ? `<div class="tracks" id="lista-pl">${pl.faixas.map((f,i) => linhaFaixa(f, {
-        indice:i, tocandoAgora:estado.origem===pl.nome && estado.indice===i, arrastavel:false,
-        acoes:[{acao:'tocar-daqui',icone:'play',titulo:'Tocar a partir daqui'},{acao:'rm-pl',icone:'x',titulo:'Remover da playlist',classe:'rm'}]
+        indice:i, tocandoAgora:estado.origem===pl.nome && estado.indice===i, emReproducao:estado.tocando, arrastavel:false,
+        acoes:[{acao:'tocar-daqui',icone:'play',titulo:'Tocar a partir daqui'},{acao:'seguir',icone:'seguir',titulo:'Tocar a seguir'},{acao:'filaAdd',icone:'fila',titulo:'Adicionar à fila'},{acao:'rm-pl',icone:'x',titulo:'Remover da playlist',classe:'rm'}]
       })).join('')}</div>`
     : '<div class="empty"><strong>Playlist vazia</strong>Use o botão + em qualquer faixa da fila, da busca ou do histórico para trazê-la para cá.</div>'}`;
 }
@@ -1010,7 +1145,7 @@ function telaRecentes(){
     ${db.recentes.length
       ? `<div class="tracks" id="lista-recentes">${db.recentes.map((f,i) => linhaFaixa(f, {
           indice:i, tocandoAgora:false, arrastavel:false,
-          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
+          acoes:[{acao:'tocar',icone:'play',titulo:'Tocar agora'},{acao:'seguir',icone:'seguir',titulo:'Tocar a seguir'},{acao:'filaAdd',icone:'fila',titulo:'Adicionar à fila'},{acao:'add',icone:'mais',titulo:'Adicionar a uma playlist'}]
         })).join('')}</div>`
       : '<div class="empty"><strong>Histórico vazio</strong>Toque alguma coisa e ela aparece aqui.</div>'}
   </section>`;
@@ -1030,6 +1165,8 @@ function ligarEventosDaView(){
     input.onkeydown = e => { if(e.key === 'Enter') disparar(); };
     input.onpaste = e => {
       const texto = (e.clipboardData || window.clipboardData).getData('text');
+      const tokens = texto.split(/\s+/).map(t => t.trim()).filter(Boolean);
+      if(tokens.length > 1){ e.preventDefault(); colarVarios(tokens); return; }
       const { video, lista } = analisarLink(texto);
       if(video || lista){ e.preventDefault(); tocarLink(texto); }
     };
@@ -1092,6 +1229,8 @@ function ligarLista(container, aoClicar, tipo){
       switch(btn.dataset.acao){
         case 'tocar':       definirFila(fonteDaLista(tipo), rotuloDaFonte(tipo), i); break;
         case 'tocar-daqui': aoClicar(i); break;
+        case 'seguir':      adicionarASeguir(faixa); break;
+        case 'filaAdd':     adicionarAoFim(faixa); break;
         case 'rm':          removerDaFila(i); break;
         case 'rm-pl':       removerDaPlaylist(estado.playlistAberta, i); break;
         case 'add':         abrirMenuPlaylists(btn, faixa); break;
@@ -1129,7 +1268,7 @@ function acaoGeral(acao){
       estado.fila = []; estado.indice = -1;
       if(estado.pronto) player.stopVideo();
       $('#stage').classList.remove('playing');
-      atualizarPainel(); renderizar();
+      atualizarPainel(); renderizar(); salvarSessao();
       break;
     case 'salvar-fila':
       pedirNovaPlaylist(estado.fila);
@@ -1154,7 +1293,7 @@ function acaoGeral(acao){
       break;
     case 'fila-pl':
       pl.faixas.forEach(f => { if(!estado.fila.some(x => x.id === f.id)) estado.fila.push({ ...f }); });
-      renderizar(); avisar('Faixas adicionadas à fila.');
+      renderizar(); salvarSessao(); avisar('Faixas adicionadas à fila.');
       break;
     case 'renomear-pl':
       abrirModal('Renomear playlist', 'Como você quer chamar essa coleção?', pl.nome, 'Salvar', nome => {
@@ -1231,6 +1370,10 @@ $('#modal-ok').onclick = () => {
   fecharModal();
 };
 $('#modal-input').onkeydown = e => { if(e.key === 'Enter') $('#modal-ok').click(); };
+
+$('#btn-ajuda').onclick = () => $('#backdrop-ajuda').classList.add('open');
+$('#ajuda-fechar').onclick = () => $('#backdrop-ajuda').classList.remove('open');
+$('#backdrop-ajuda').onclick = e => { if(e.target === $('#backdrop-ajuda')) $('#backdrop-ajuda').classList.remove('open'); };
 
 function pedirNovaPlaylist(faixas = []){
   const sugestao = faixas.length ? 'Fila de ' + new Date().toLocaleDateString('pt-BR') : 'Minha playlist';
@@ -1391,7 +1534,8 @@ document.addEventListener('keydown', e => {
   if(e.code === 'ArrowLeft'  && estado.pronto) player.seekTo(Math.max(0, player.getCurrentTime() - 5), true);
   if(e.key.toLowerCase() === 'm') $('#btn-mute').click();
   if(e.key.toLowerCase() === 'n') proxima();
-  if(e.key === 'Escape'){ fecharPop(); fecharModal(); }
+  if(e.key === '?') $('#backdrop-ajuda').classList.add('open');
+  if(e.key === 'Escape'){ fecharPop(); fecharModal(); $('#backdrop-ajuda').classList.remove('open'); }
 });
 
 /* --------------------------------------------------------------------------
@@ -1411,6 +1555,7 @@ document.addEventListener('keydown', e => {
   atualizarIconeVolume();
   renderizar();
   atualizarPainel();
+  await restaurarSessao();
   setTimeout(() => { const i = $('#url-input'); i && i.focus(); }, 60);
 })();
 
